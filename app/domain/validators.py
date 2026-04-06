@@ -3,13 +3,15 @@ import re
 CPF_WEIGHTS = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
 CNPJ_WEIGHTS = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
 
+
 def validate_tax_id(tax_id: str) -> bool:
-    digits = re.sub('\\D', '', tax_id)
+    digits = re.sub("\\D", "", tax_id)
     if len(digits) == 11:
         return _validate_cpf(digits)
     elif len(digits) == 14:
         return _validate_cnpj(digits)
     return False
+
 
 def _validate_cpf(digits: str) -> bool:
     if digits == digits[0] * 11:
@@ -20,6 +22,7 @@ def _validate_cpf(digits: str) -> bool:
         if check != int(digits[i]):
             return False
     return True
+
 
 def _validate_cnpj(digits: str) -> bool:
     if digits == digits[0] * 14:

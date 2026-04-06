@@ -17,6 +17,7 @@ class GenerateInvoiceBatchUseCase:
     Responsável por automatizar a criação de faturas aleatórias para o ambiente
     de Sandbox do Stark Bank, permitindo alimentar o fluxo de orquestração financeira.
     """
+
     def __init__(self, repo: InvoiceRepository, billing: BillingGateway):
         """
         Inicializa o caso de uso.
@@ -27,13 +28,13 @@ class GenerateInvoiceBatchUseCase:
         """
         self.repo = repo
         self.billing = billing
-        self.faker = Faker('pt_BR')
+        self.faker = Faker("pt_BR")
 
     async def execute(
         self,
         count: int | None = None,
         min_size: int | None = None,
-        max_size: int | None = None
+        max_size: int | None = None,
     ) -> tuple[list[Invoice], InvoicesGenerated]:
         """
         Gera e persiste um lote de faturas aleatórias.
@@ -55,7 +56,9 @@ class GenerateInvoiceBatchUseCase:
         total_amount = 0
 
         for _ in range(count):
-            amount_val = random.randint(settings.batch_amount_min, settings.batch_amount_max)
+            amount_val = random.randint(
+                settings.batch_amount_min, settings.batch_amount_max
+            )
             amount = Money(amount_val)
 
             invoice = Invoice(
@@ -73,4 +76,6 @@ class GenerateInvoiceBatchUseCase:
         for inv in external_invoices:
             await self.repo.save_invoice(inv)
 
-        return external_invoices, InvoicesGenerated(count=len(external_invoices), total_amount=total_amount)
+        return external_invoices, InvoicesGenerated(
+            count=len(external_invoices), total_amount=total_amount
+        )

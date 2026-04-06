@@ -11,12 +11,22 @@ from app.infra.database import get_db
 from app.infra.repositories.payment_repo import PaymentRepository
 
 
-async def get_process_payment_usecase(session: AsyncSession=Depends(get_db)) -> ProcessPaidInvoiceUseCase:
+async def get_process_payment_usecase(
+    session: AsyncSession = Depends(get_db),
+) -> ProcessPaidInvoiceUseCase:
     repo = PaymentRepository(session)
     transfer_gateway = StarkBankTransferAdapter()
-    return ProcessPaidInvoiceUseCase(invoice_repo=repo, transfer_repo=repo, webhook_repo=repo, transfer_gateway=transfer_gateway)
+    return ProcessPaidInvoiceUseCase(
+        invoice_repo=repo,
+        transfer_repo=repo,
+        webhook_repo=repo,
+        transfer_gateway=transfer_gateway,
+    )
 
-async def get_generate_invoices_usecase(session: AsyncSession=Depends(get_db)) -> GenerateInvoiceBatchUseCase:
+
+async def get_generate_invoices_usecase(
+    session: AsyncSession = Depends(get_db),
+) -> GenerateInvoiceBatchUseCase:
     repo = PaymentRepository(session)
     billing_gateway = StarkBankBillingAdapter()
     return GenerateInvoiceBatchUseCase(repo=repo, billing=billing_gateway)

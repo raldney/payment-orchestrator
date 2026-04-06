@@ -4,7 +4,7 @@ import sys
 import uuid
 from unittest.mock import AsyncMock
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app.application.use_cases.generate_invoices import GenerateInvoiceBatchUseCase
 from app.application.use_cases.process_payment import ProcessPaidInvoiceUseCase
@@ -30,7 +30,7 @@ async def dry_run():
         amount=Money(1000),
         tax_id="20018183000180",
         name="Test User",
-        status=InvoiceStatus.PENDING
+        status=InvoiceStatus.PENDING,
     )
 
     mock_repo.get_invoice_by_external_id.return_value = test_invoice
@@ -45,7 +45,7 @@ async def dry_run():
         invoice_repo=mock_repo,
         transfer_repo=mock_repo,
         webhook_repo=mock_webhook_repo,
-        transfer_gateway=mock_transfer_gate
+        transfer_gateway=mock_transfer_gate,
     )
     print("\n--- Dry Run: Processing Webhook (credited) ---")
     success, proc_event = await pay_use_case.execute(
@@ -54,13 +54,16 @@ async def dry_run():
         external_event_id="evt_test",
         external_invoice_id="stark_123",
         amount=1000,
-        fee=50
+        fee=50,
     )
 
     if success and proc_event:
-        print(f"Success! Transfer ID: {proc_event.transfer_id} | Net: {proc_event.amount}")
+        print(
+            f"Success! Transfer ID: {proc_event.transfer_id} | Net: {proc_event.amount}"
+        )
     else:
         print("Processing skipped or failed (check logs)")
+
 
 if __name__ == "__main__":
     asyncio.run(dry_run())

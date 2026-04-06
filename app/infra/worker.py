@@ -106,7 +106,8 @@ def on_worker_ready(sender, **kwargs):
     """
     if not settings.generate_invoices_enabled:
         logger.info(
-            "SCHEDULER: Agendamento automático desabilitado via configuração (on_worker_ready ignorado)."
+            "SCHEDULER: Agendamento automático desabilitado via config "
+            "(on_worker_ready ignorado)."
         )
         return
 
@@ -166,7 +167,8 @@ def process_webhook_event_task(
         )
         if not success:
             raise RuntimeError(
-                f"Falha ao processar webhook {external_event_id}: Fatura não encontrada ou erro de negócio."
+                f"Falha ao processar webhook {external_event_id}: "
+                "Fatura não encontrada ou erro de negócio."
             )
     except Exception as exc:
         try:
@@ -223,7 +225,8 @@ def generate_invoices_task(self, start_time: float | None = None):
 
     if elapsed_hours >= settings.lifecycle_hours:
         logger.info(
-            f"LIFECYCLE: Ciclo de vida de {settings.lifecycle_hours}h atingido. Interrompendo agendamento automático."
+            f"LIFECYCLE: Ciclo de vida de {settings.lifecycle_hours}h atingido. "
+            "Interrompendo agendamento automático."
         )
         return
 

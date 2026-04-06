@@ -9,6 +9,7 @@ class InvoicesGenerated(DomainEvent):
     count: int
     total_amount: int
 
+
 @dataclass
 class PaymentProcessed(DomainEvent):
     invoice_id: uuid.UUID

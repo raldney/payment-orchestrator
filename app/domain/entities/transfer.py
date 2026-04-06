@@ -1,15 +1,17 @@
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from uuid import UUID, uuid7
 
 from app.domain.value_objects.money import Money
 
 
-class TransferStatus(str, Enum):
+class TransferStatus(StrEnum):
     """Estados do ciclo de vida da transferência (Repasse)."""
+
     CREATED = "created"
     SUCCESS = "success"
     FAILED = "failed"
+
 
 @dataclass
 class Transfer:
@@ -17,6 +19,7 @@ class Transfer:
     Entidade Transferência - Representa um repasse financeiro executado.
     Vinculada a uma Fatura (invoice_id).
     """
+
     invoice_id: UUID
     external_id: str
     amount: Money

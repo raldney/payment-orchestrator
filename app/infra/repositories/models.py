@@ -95,7 +95,10 @@ class InvoiceModel(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<InvoiceModel id={self.id!r} status={self.status.value!r} amount={self.amount}>"
+        return (
+            f"<InvoiceModel id={self.id!r} "
+            f"status={self.status.value!r} amount={self.amount}>"
+        )
 
 
 class TransferModel(Base):
@@ -143,7 +146,10 @@ class TransferModel(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<TransferModel id={self.id!r} invoice_id={self.invoice_id!r} status={self.status.value!r} amount={self.amount}>"
+        return (
+            f"<TransferModel id={self.id!r} invoice_id={self.invoice_id!r} "
+            f"status={self.status.value!r} amount={self.amount}>"
+        )
 
 
 class WebhookEventModel(Base):
@@ -181,4 +187,7 @@ class WebhookEventModel(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<WebhookEventModel id={self.id!r} source={self.source!r} external_event_id={self.external_event_id!r}>"
+        return (
+            f"<WebhookEventModel id={self.id!r} source={self.source!r} "
+            f"external_event_id={self.external_event_id!r}>"
+        )

@@ -9,6 +9,7 @@ class Money:
     Value Object representando valores monetários em centavos.
     Garante precisão decimal e imutabilidade.
     """
+
     amount: int
     currency: str = "BRL"
 
@@ -16,12 +17,12 @@ class Money:
         if self.amount < 0:
             raise DomainException("Valor monetário não pode ser negativo")
 
-    def __add__(self, other: 'Money') -> 'Money':
+    def __add__(self, other: "Money") -> "Money":
         if self.currency != other.currency:
             raise DomainException("Não é possível somar moedas diferentes")
         return Money(self.amount + other.amount, self.currency)
 
-    def __sub__(self, other: 'Money') -> 'Money':
+    def __sub__(self, other: "Money") -> "Money":
         if self.currency != other.currency:
             raise DomainException("Não é possível subtrair moedas diferentes")
         if self.amount < other.amount:

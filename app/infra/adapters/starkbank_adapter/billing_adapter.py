@@ -11,7 +11,10 @@ class StarkBankBillingAdapter(BillingGateway):
     """
 
     async def create_invoices(self, invoices: list[Invoice]) -> list[Invoice]:
-        """Cria múltiplas faturas no Stark Bank e retorna com IDs externos preenchidos."""
+        """
+        Cria múltiplas faturas no Stark Bank e retorna
+        com IDs externos preenchidos.
+        """
         stark_invoices = [
             starkbank.Invoice(
                 amount=inv.amount.amount,
@@ -25,7 +28,7 @@ class StarkBankBillingAdapter(BillingGateway):
 
         created = starkbank.invoice.create(stark_invoices)
 
-        for domain_inv, stark_inv in zip(invoices, created):
+        for domain_inv, stark_inv in zip(invoices, created, strict=True):
             domain_inv.external_id = stark_inv.id
             domain_inv.status = InvoiceStatus.PENDING
 

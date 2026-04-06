@@ -172,7 +172,10 @@ class TestProcessPaidInvoiceUseCase:
 
     @pytest.mark.asyncio
     async def test_returns_false_for_unknown_invoice(self) -> None:
-        """Se a fatura não existe localmente, deve retornar False para sinalizar erro de rastreio."""
+        """
+        Se a fatura não existe localmente, deve retornar False
+        para sinalizar erro de rastreio.
+        """
         invoice_repo, transfer_repo, webhook_repo, gateway = (
             AsyncMock(),
             AsyncMock(),
@@ -262,7 +265,10 @@ class TestProcessPaidInvoiceUseCase:
 
     @pytest.mark.asyncio
     async def test_persists_transfer_intent_before_gateway_call(self) -> None:
-        """O registro de intenção de transferência deve ser salvo antes da chamada externa (Prevenção de Data Loss)."""
+        """
+        O registro de intenção de transferência deve ser salvo antes
+        da chamada externa (Prevenção de Data Loss).
+        """
         call_order = []
         invoice_repo, transfer_repo, webhook_repo, gateway = (
             AsyncMock(),
@@ -314,7 +320,10 @@ class TestProcessPaidInvoiceUseCase:
 
     @pytest.mark.asyncio
     async def test_execute_handles_prefixed_id_successfully(self) -> None:
-        """Deve ser capaz de localizar a fatura via UUID interno como fallback se o ID externo falhar."""
+        """
+        Deve ser capaz de localizar a fatura via UUID interno
+        como fallback se o ID externo falhar.
+        """
         invoice_repo, transfer_repo, webhook_repo, gateway = (
             AsyncMock(),
             AsyncMock(),

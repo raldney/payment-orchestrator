@@ -1,17 +1,18 @@
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from uuid import UUID, uuid7
 
 from app.domain.exceptions import DomainException
 from app.domain.value_objects.money import Money
 
 
-class InvoiceStatus(str, Enum):
+class InvoiceStatus(StrEnum):
     PENDING = "pending"
     PAID = "paid"
     CREDITED = "credited"
     FAILED = "failed"
     EXPIRED = "expired"
+
 
 @dataclass
 class Invoice:
@@ -27,10 +28,19 @@ class Invoice:
         self.tax_id = "".join(filter(str.isdigit, self.tax_id))
 
     _ALLOWED_TRANSITIONS = {
-        InvoiceStatus.PENDING: {InvoiceStatus.PAID, InvoiceStatus.CREDITED, InvoiceStatus.EXPIRED, InvoiceStatus.FAILED},
+        InvoiceStatus.PENDING: {
+            InvoiceStatus.PAID,
+            InvoiceStatus.CREDITED,
+            InvoiceStatus.EXPIRED,
+            InvoiceStatus.FAILED,
+        },
         InvoiceStatus.PAID: {InvoiceStatus.CREDITED, InvoiceStatus.FAILED},
         InvoiceStatus.CREDITED: set(),
-        InvoiceStatus.FAILED: {InvoiceStatus.PENDING, InvoiceStatus.PAID, InvoiceStatus.CREDITED},
+        InvoiceStatus.FAILED: {
+            InvoiceStatus.PENDING,
+            InvoiceStatus.PAID,
+            InvoiceStatus.CREDITED,
+        },
         InvoiceStatus.EXPIRED: set(),
     }
 
@@ -39,7 +49,9 @@ class Invoice:
             return
         allowed = self._ALLOWED_TRANSITIONS.get(self.status, set())
         if new_status not in allowed:
-            raise DomainException(f"Transição inválida de {self.status.value} para {new_status.value}")
+            raise DomainException(
+                f"Transição inválida de {self.status.value} para {new_status.value}"
+            )
         self.status = new_status
 
     @property

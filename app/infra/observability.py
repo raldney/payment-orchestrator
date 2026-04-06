@@ -115,10 +115,11 @@ def setup_celery_logging(**kwargs):
 
 
 def get_resource():
+    instance_id = f"{socket.gethostname()}-{os.getpid()}-{uuid.uuid4().hex[:6]}"
     return Resource(
         attributes={
             "service.name": "payment-orchestrator",
-            "service.instance.id": f"{socket.gethostname()}-{os.getpid()}-{uuid.uuid4().hex[:6]}",
+            "service.instance.id": instance_id,
             "deployment.environment": settings.stark_environment,
         }
     )

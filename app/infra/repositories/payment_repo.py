@@ -18,6 +18,7 @@ class PaymentRepository(SqlAlchemyRepository):
     Implementação concreta do Repositório de Pagamentos usando SQLAlchemy.
     Gerencia a persistência de Invoices, Transfers e Webhooks com suporte a transações.
     """
+
     def __init__(self, session: AsyncSession):
         self.session = session
 
@@ -25,25 +26,32 @@ class PaymentRepository(SqlAlchemyRepository):
         """
         Salva ou atualiza uma fatura usando UPSERT.
         """
-        stmt = pg_insert(InvoiceModel).values(
-            id=invoice.id,
-            external_id=invoice.external_id,
-            amount=invoice.amount.amount,
-            tax_id=invoice.tax_id,
-            name=invoice.name,
-            status=invoice.status.value,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
-        ).on_conflict_do_update(
-            index_elements=['external_id'],
-            set_={'status': invoice.status.value, 'updated_at': datetime.now(UTC)}
+        stmt = (
+            pg_insert(InvoiceModel)
+            .values(
+                id=invoice.id,
+                external_id=invoice.external_id,
+                amount=invoice.amount.amount,
+                tax_id=invoice.tax_id,
+                name=invoice.name,
+                status=invoice.status.value,
+                created_at=datetime.now(UTC),
+                updated_at=datetime.now(UTC),
+            )
+            .on_conflict_do_update(
+                index_elements=["external_id"],
+                set_={"status": invoice.status.value, "updated_at": datetime.now(UTC)},
+            )
         )
         await self.session.execute(stmt)
         return invoice
 
-    async def get_invoice_by_external_id(self, external_id: str, for_update: bool = False) -> Invoice | None:
+    async def get_invoice_by_external_id(
+        self, external_id: str, for_update: bool = False
+    ) -> Invoice | None:
         """
-        Recupera uma fatura pelo ID externo, opcionalmente aplicando bloqueio pessimista.
+        Recupera uma fatura pelo ID externo, opcionalmente
+        aplicando bloqueio pessimista.
         """
         stmt = select(InvoiceModel).where(InvoiceModel.external_id == external_id)
         if for_update:
@@ -82,11 +90,18 @@ class PaymentRepository(SqlAlchemyRepository):
             status=InvoiceStatus(model.status),
         )
 
-    async def list_invoices(self, limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
+    async def list_invoices(
+        self, limit: int = 50, offset: int = 0
+    ) -> list[dict[str, Any]]:
         """
         Lista faturas cadastradas no sistema.
         """
-        stmt = select(InvoiceModel).order_by(InvoiceModel.created_at.desc()).limit(limit).offset(offset)
+        stmt = (
+            select(InvoiceModel)
+            .order_by(InvoiceModel.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
         result = await self.session.execute(stmt)
         models = result.scalars().all()
         return [
@@ -104,24 +119,29 @@ class PaymentRepository(SqlAlchemyRepository):
 
     async def save_transfer(self, transfer: Transfer) -> Transfer:
         """
-        Salva ou atualiza uma transferência usando UPSERT para evitar conflitos de chave primária.
+        Salva ou atualiza uma transferência usando UPSERT
+        para evitar conflitos de chave primária.
         """
-        stmt = pg_insert(TransferModel).values(
-            id=transfer.id,
-            invoice_id=transfer.invoice_id,
-            external_id=transfer.external_id,
-            amount=transfer.amount.amount,
-            fee=transfer.fee.amount,
-            status=transfer.status.value,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
-        ).on_conflict_do_update(
-            index_elements=['id'],
-            set_={
-                'status': transfer.status.value,
-                'external_id': transfer.external_id,
-                'updated_at': datetime.now(UTC)
-            }
+        stmt = (
+            pg_insert(TransferModel)
+            .values(
+                id=transfer.id,
+                invoice_id=transfer.invoice_id,
+                external_id=transfer.external_id,
+                amount=transfer.amount.amount,
+                fee=transfer.fee.amount,
+                status=transfer.status.value,
+                created_at=datetime.now(UTC),
+                updated_at=datetime.now(UTC),
+            )
+            .on_conflict_do_update(
+                index_elements=["id"],
+                set_={
+                    "status": transfer.status.value,
+                    "external_id": transfer.external_id,
+                    "updated_at": datetime.now(UTC),
+                },
+            )
         )
         await self.session.execute(stmt)
         return transfer
@@ -144,11 +164,18 @@ class PaymentRepository(SqlAlchemyRepository):
             status=TransferStatus(model.status),
         )
 
-    async def list_transfers(self, limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
+    async def list_transfers(
+        self, limit: int = 50, offset: int = 0
+    ) -> list[dict[str, Any]]:
         """
         Lista transferências cadastradas no sistema.
         """
-        stmt = select(TransferModel).order_by(TransferModel.created_at.desc()).limit(limit).offset(offset)
+        stmt = (
+            select(TransferModel)
+            .order_by(TransferModel.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
         result = await self.session.execute(stmt)
         models = result.scalars().all()
         return [
@@ -164,21 +191,34 @@ class PaymentRepository(SqlAlchemyRepository):
             for m in models
         ]
 
-    async def log_webhook_event(self, source: str, event_type: str, external_event_id: str, raw_payload: dict[str, Any] | None = None) -> bool:
+    async def log_webhook_event(
+        self,
+        source: str,
+        event_type: str,
+        external_event_id: str,
+        raw_payload: dict[str, Any] | None = None,
+    ) -> bool:
         """
-        Registra um evento de webhook garantindo a idempotência via ON CONFLICT DO NOTHING.
+        Registra um evento de webhook garantindo a idempotência
+        via ON CONFLICT DO NOTHING.
         """
-        stmt = pg_insert(WebhookEventModel).values(
-            source=source,
-            event_type=event_type,
-            external_event_id=external_event_id,
-            raw_payload=raw_payload,
-            received_at=datetime.now(UTC),
-        ).on_conflict_do_nothing()
+        stmt = (
+            pg_insert(WebhookEventModel)
+            .values(
+                source=source,
+                event_type=event_type,
+                external_event_id=external_event_id,
+                raw_payload=raw_payload,
+                received_at=datetime.now(UTC),
+            )
+            .on_conflict_do_nothing()
+        )
         result = await self.session.execute(stmt)
         return result.rowcount > 0
 
-    async def update_webhook_event_transfer(self, source: str, external_event_id: str, transfer_id: UUID) -> None:
+    async def update_webhook_event_transfer(
+        self, source: str, external_event_id: str, transfer_id: UUID
+    ) -> None:
         """
         Vincula uma transferência ao evento de webhook original.
         """
