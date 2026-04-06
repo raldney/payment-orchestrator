@@ -1,0 +1,79 @@
+services:
+  # API: Porta 8000 apenas interna (Nginx cuida da entrada)
+  api:
+    ports: [] 
+    expose:
+      - "8000"
+
+  # Worker: Sem portas expostas (como no dev)
+  worker:
+    ports: []
+
+  # DB: Segurança máxima em prod (Postgres não deve ser acessível via IP público)
+  db:
+    ports: []
+    expose:
+      - "5432"
+
+  # Redis: Apenas interno para Celery
+  redis:
+    ports: []
+    expose:
+      - "6379"
+
+  # Grafana: Acesso exclusivo via Nginx (/grafana/)
+  grafana:
+    ports: []
+    expose:
+      - "3000"
+    environment:
+      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s:%(http_port)s/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+
+  # RabbitMQ: Acesso Management via Nginx (/rabbitmq/)
+  rabbitmq:
+    ports: []
+    expose:
+      - "5672"
+      - "15672"
+
+  # Observability: Escondendo portas do Mimir, Loki e Tempo do mundo externo
+  mimir:
+    ports: []
+    expose:
+      - "9009"
+
+  loki:
+    ports: []
+    expose:
+      - "3100"
+
+  tempo:
+    ports: []
+    expose:
+      - "3200"
+
+  otel-collector:
+    ports: []
+    expose:
+      - "4317"
+      - "4318"
+
+  # Nginx: Único ponto de entrada aberto (80/443)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+      - grafana
+      - rabbitmq
+    networks:
+      - payment-net

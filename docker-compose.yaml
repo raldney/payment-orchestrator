@@ -1,0 +1,199 @@
+services:
+  api:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --workers 1
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - SERVICE_COMPONENT=api
+    volumes:
+      - .:/app
+      - /app/.venv
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8000/health || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - payment-net
+
+  worker:
+    build: .
+    command: celery -A app.infra.worker.app worker --loglevel=info --concurrency=4
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/payment_db
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=amqp://payment:payment@rabbitmq:5672/payment
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - RABBITMQ_USER=payment
+      - RABBITMQ_PASS=payment
+      - STARK_PROJECT_ID=${STARK_PROJECT_ID}
+      - STARK_PRIVATE_KEY=${STARK_PRIVATE_KEY}
+      - STARK_ENVIRONMENT=${STARK_ENVIRONMENT}
+      - DB_POOLING=false
+      - SERVICE_COMPONENT=worker
+    volumes:
+      - .:/app
+      - /app/.venv
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+    restart: unless-stopped
+    depends_on:
+      - rabbitmq
+      - redis
+      - db
+    networks:
+      - payment-net
+
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-payment_db}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - payment-net
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
+  rabbitmq:
+    build:
+      context: .
+      dockerfile: .docker/rabbitmq/Dockerfile
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-payment}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-payment}
+      RABBITMQ_DEFAULT_VHOST: payment
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./.docker/configs/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - payment-net
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - payment-net
+
+  otel-collector:
+    image: otel/opentelemetry-collector:0.89.0
+    command: [ "--config=/etc/otel-collector-config.yaml" ]
+    volumes:
+      - ./.docker/configs/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    networks:
+      - payment-net
+    depends_on:
+      - tempo
+
+  tempo:
+    image: grafana/tempo:2.3.0
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./.docker/configs/tempo-config.yaml:/etc/tempo.yaml
+      - tempo_data:/tmp/tempo
+    ports:
+      - "3200:3200"
+    networks:
+      - payment-net
+
+  loki:
+    image: grafana/loki:2.9.2
+    user: "0:0"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./.docker/configs/loki-config.yaml:/etc/loki/local-config.yaml
+      - loki_data:/tmp/loki
+    ports:
+      - "3100:3100"
+    networks:
+      - payment-net
+
+  promtail:
+    image: grafana/promtail:2.9.2
+    user: "0:0" # Run as root to read docker socket
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./.docker/configs/promtail-config.yaml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - payment-net
+    depends_on:
+      - loki
+
+  mimir:
+    image: grafana/mimir:2.10.0
+    command: [ "-config.file=/etc/mimir.yaml" ]
+    volumes:
+      - ./.docker/configs/mimir-config.yaml:/etc/mimir.yaml
+      - mimir_data:/tmp/mimir
+    ports:
+      - "9009:9009"
+    networks:
+      - payment-net
+    depends_on:
+      - otel-collector
+
+  grafana:
+    image: grafana/grafana:10.2.2
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./.docker/configs/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ./.docker/configs/grafana-dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
+      - ./.docker/configs/dashboards:/etc/grafana/provisioning/dashboards/json
+    ports:
+      - "3000:3000"
+    networks:
+      - payment-net
+
+networks:
+  payment-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  loki_data:
+  tempo_data:
+  mimir_data:
+  grafana_data:
+  rabbitmq_data:

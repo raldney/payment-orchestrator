@@ -1,0 +1,49 @@
+# Mimir Monolithic Configuration (Canonical 2.10)
+target: all
+multitenancy_enabled: false
+
+server:
+  http_listen_port: 9009
+  grpc_listen_port: 9095
+  log_level: info
+
+# Common storage configuration
+common:
+  storage:
+    backend: filesystem
+    filesystem:
+      dir: /tmp/mimir/data
+
+# Ingester ring: using inmemory for single-process monolith
+ingester:
+  ring:
+    replication_factor: 1
+    kvstore:
+      store: inmemory
+
+# Distributor ring: using inmemory
+distributor:
+  ring:
+    kvstore:
+      store: inmemory
+
+# Storage configuration
+blocks_storage:
+  backend: filesystem
+  filesystem:
+    dir: /tmp/mimir/data/blocks
+  tsdb:
+    dir: /tmp/mimir/data/tsdb
+
+compactor:
+  data_dir: /tmp/mimir/data/compactor
+
+alertmanager_storage:
+  backend: filesystem
+  filesystem:
+    dir: /tmp/mimir/data/alertmanager
+
+ruler_storage:
+  backend: filesystem
+  filesystem:
+    dir: /tmp/mimir/data/ruler
