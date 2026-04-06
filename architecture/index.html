@@ -1,0 +1,1059 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentação técnica da solução de automação de faturamento e repasse.">
+      
+      
+      
+      
+        <link rel="prev" href="../testing/">
+      
+      
+        <link rel="next" href="../architecture_decisions/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Visão Geral - StarkBank Payment Orchestrator - Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#arquitetura-detalhada-e-ciclo-de-vida" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="StarkBank Payment Orchestrator - Docs" class="md-header__button md-logo" aria-label="StarkBank Payment Orchestrator - Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            StarkBank Payment Orchestrator - Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Visão Geral
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../testing/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quality & Testing
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+  Arquitetura
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../observability/" class="md-tabs__link">
+          
+  
+  
+  Observabilidade
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../api/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  API Reference
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="StarkBank Payment Orchestrator - Docs" class="md-nav__button md-logo" aria-label="StarkBank Payment Orchestrator - Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    StarkBank Payment Orchestrator - Docs
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality & Testing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arquitetura
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Arquitetura
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visão Geral
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visão Geral
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-diagrama-de-arquitetura-hexagonal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Diagrama de Arquitetura (Hexagonal)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-ciclo-de-vida-do-worker-automacao-24h" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Ciclo de Vida do Worker (Automação 24h)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-maquina-de-estados-financeiro" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Máquina de Estados (Financeiro)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Máquina de Estados (Financeiro)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fluxo-da-fatura-invoice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fluxo da Fatura (Invoice)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fluxo-da-transferencia-transfer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fluxo da Transferência (Transfer)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-garantias-de-integridade-financeira" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Garantias de Integridade Financeira
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Garantias de Integridade Financeira">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fluxo-de-execucao-e2e" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fluxo de Execução E2E
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture_decisions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisões de Arquitetura (ADRs)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Observabilidade
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Observabilidade
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visão Geral
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-diagrama-de-arquitetura-hexagonal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Diagrama de Arquitetura (Hexagonal)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-ciclo-de-vida-do-worker-automacao-24h" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Ciclo de Vida do Worker (Automação 24h)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-maquina-de-estados-financeiro" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Máquina de Estados (Financeiro)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Máquina de Estados (Financeiro)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fluxo-da-fatura-invoice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fluxo da Fatura (Invoice)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fluxo-da-transferencia-transfer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fluxo da Transferência (Transfer)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-garantias-de-integridade-financeira" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Garantias de Integridade Financeira
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Garantias de Integridade Financeira">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fluxo-de-execucao-e2e" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fluxo de Execução E2E
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="arquitetura-detalhada-e-ciclo-de-vida">🏗️ Arquitetura Detalhada e Ciclo de Vida</h1>
+<p>Este documento descreve o funcionamento interno do <strong>Payment Orchestrator</strong>, detalhando as camadas, a máquina de estados e o ciclo de automação.</p>
+<hr />
+<h2 id="1-diagrama-de-arquitetura-hexagonal">1. Diagrama de Arquitetura (Hexagonal)</h2>
+<p>O sistema segue os princípios de <em>Clean Architecture</em>, isolando a inteligência de negócio das ferramentas de infraestrutura.</p>
+<pre class="mermaid"><code>graph TD
+    subgraph Infra ["Camada de Infraestrutura (Adapters)"]
+        API[FastAPI Controller]
+        WRK[Celery Worker Processes]
+        DB[(PostgreSQL 18)]
+        MQ[RabbitMQ Broker]
+        OTEL[OpenTelemetry Collector]
+        SB[StarkBank SDK]
+    end
+
+    subgraph App ["Camada de Aplicação (Ports/UseCases)"]
+        UC1[GenerateInvoicesUseCase]
+        UC2[ProcessPaymentUseCase]
+        EVT[Event Dispatcher]
+    end
+
+    subgraph Domain ["Camada de Domínio (Core Logic)"]
+        INV[Invoice Entity]
+        TRF[Transfer Entity]
+        MON[Money Value Object]
+        RULES[Business Rules]
+    end
+
+    %% Fluxos
+    MQ --&gt; WRK
+    WRK --&gt; UC1
+    API --&gt; UC2
+    UC1 &amp; UC2 --&gt; Domain
+    UC1 &amp; UC2 --&gt; DB
+    UC1 --&gt; SB
+    UC2 --&gt; SB
+
+    %% Observabilidade
+    WRK &amp; API -- "Events" --&gt; EVT
+    EVT -- "Metrics/Traces" --&gt; OTEL</code></pre>
+<hr />
+<h2 id="2-ciclo-de-vida-do-worker-automacao-24h">2. Ciclo de Vida do Worker (Automação 24h)</h2>
+<p>O agendador utiliza uma técnica de <em>Self-Chaining</em> via RabbitMQ. O ciclo tem um tempo de vida finito para garantir a economia de recursos em ambiente Sandbox.</p>
+<pre class="mermaid"><code>flowchart TD
+    Start((Início do Ciclo)) --&gt; Task[Executar generate_invoices_task]
+    Task --&gt; Check_Enabled{Agendamento Habilitado?}
+
+    Check_Enabled -- "Não" --&gt; Stop[Interromper Corrente]
+    Check_Enabled -- "Sim" --&gt; Check_Life{Tempo decorrido &lt;br/&gt; &gt;= LIFECYCLE_HOURS?}
+
+    Check_Life -- "Sim" --&gt; Stop
+    Check_Life -- "Não" --&gt; Exec[Gerar Lote de Faturas]
+
+    Exec --&gt; DB_Commit[Salvar via UPSERT]
+    DB_Commit --&gt; Dispatch[Disparar Evento Metrics]
+    Dispatch --&gt; Schedule[Agendar Próxima via Countdown]
+    Schedule --&gt; Task
+
+    Stop --&gt; End((Fim))</code></pre>
+<hr />
+<h2 id="3-maquina-de-estados-financeiro">3. Máquina de Estados (Financeiro)</h2>
+<p>O fluxo de vida das entidades é garantido por uma máquina de estados rígida, validada por webhooks e assinaturas digitais.</p>
+<h3 id="fluxo-da-fatura-invoice">Fluxo da Fatura (Invoice)</h3>
+<p>As transições são protegidas no domínio e persistidas de forma idempotente.</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; pending: Batch Generation
+    pending --&gt; paid: Webhook 'paid'
+    pending --&gt; credited: Webhook 'credited'
+    paid --&gt; credited: Webhook 'credited'
+
+    credited --&gt; transfer_executed: Execute Repasse
+
+    pending --&gt; expired: Expiration
+    pending --&gt; failed: Provider Error
+
+    credited --&gt; [*]: Finalizado</code></pre>
+<h3 id="fluxo-da-transferencia-transfer">Fluxo da Transferência (Transfer)</h3>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; created: Invoice Credited
+    created --&gt; success: Repasse Concluído via SDK
+    created --&gt; failed: Gateway Error
+
+    success --&gt; [*]
+    failed --&gt; created: Retry Logic (Celery)</code></pre>
+<hr />
+<h2 id="4-garantias-de-integridade-financeira">4. Garantias de Integridade Financeira</h2>
+<ol>
+<li><strong>Money Value Object</strong>: Todos os valores monetários são encapsulados no objeto <code>Money</code>, garantindo precisão em centavos e impedindo valores negativos ou operações inválidas.</li>
+<li><strong>Double-Layer Idempotency</strong>:<ul>
+<li><strong>Infra</strong>: O <code>WebhookEventRepository</code> registra cada <code>event_id</code> único no PostgreSQL usando <code>ON CONFLICT DO NOTHING</code>.</li>
+<li><strong>Domínio</strong>: A entidade <code>Invoice</code> valida a transição de estado. Se um evento tenta mover para um estado já atingido ou inválido, o processo é ignorado ou corrigido.</li>
+</ul>
+</li>
+<li><strong>Pessimistic Locking</strong>: O processamento de pagamentos utiliza <code>SELECT FOR UPDATE</code> para bloquear a linha da fatura no banco, evitando condições de corrida entre múltiplos workers Celery.</li>
+<li><strong>Resiliência via UPSERT</strong>: O <code>PaymentRepository</code> utiliza a estratégia de UPSERT (<code>ON CONFLICT DO UPDATE</code>) para todas as persistências de entidades, garantindo que retentativas de jobs não criem duplicatas indesejadas.</li>
+<li><strong>Observabilidade de Negócio</strong>: Métricas personalizadas como <code>payment.scheduler.status</code> e <code>payment.invoices.next_run_timestamp</code> permitem monitoramento em tempo real do status da automação no Grafana.</li>
+</ol>
+<hr />
+<h3 id="fluxo-de-execucao-e2e">Fluxo de Execução E2E</h3>
+<ol>
+<li><strong>Geração</strong>: O Worker gera faturas aleatórias (nomes/CPFs via Faker) e as envia para o StarkBank.</li>
+<li><strong>Webhooks</strong>: A API recebe eventos <code>paid</code> e <code>credited</code>.</li>
+<li><strong>Orquestração</strong>: <ul>
+<li>Evento <code>paid</code>: Atualiza status para <code>PAID</code>.</li>
+<li>Evento <code>credited</code>: Atualiza status para <code>CREDITED</code> e dispara <code>execute_transfer</code> (Repasse do valor líquido).</li>
+</ul>
+</li>
+<li><strong>Telemetria</strong>: Rastreamento completo de cada webhook, desde a recepção na API até a conclusão do repasse no Worker.</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
