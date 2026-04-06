@@ -36,10 +36,11 @@ class JsonFormatter(logging.Formatter):
             "timestamp": self.formatTime(record, self.datefmt),
             "level": record.levelname,
             "message": record.getMessage(),
-            "logger.name": record.name,
-            "code.filepath": record.pathname,
-            "code.function": record.funcName,
-            "code.lineno": record.lineno,
+            "service_name": record.name,
+            "code_filepath": record.pathname,
+            "code_function": record.funcName,
+            "code_lineno": record.lineno,
+            "module": record.name,
         }
         if record.exc_info:
             log_record["exception.message"] = self.formatException(record.exc_info)
@@ -77,8 +78,8 @@ class JsonFormatter(logging.Formatter):
         if span_context.is_valid:
             log_record["trace_id"] = format(span_context.trace_id, "032x")
             log_record["span_id"] = format(span_context.span_id, "016x")
-        log_record["service.name"] = "payment-orchestrator"
-        log_record["service.component"] = os.getenv("SERVICE_COMPONENT", "unknown")
+        log_record["service_name"] = "payment-orchestrator"
+        log_record["service_component"] = os.getenv("SERVICE_COMPONENT", "unknown")
         sensitive_keywords = settings.log_sensitive_keywords
         for key in list(log_record.keys()):
             if any(kw in key.lower() for kw in sensitive_keywords):
@@ -165,18 +166,18 @@ logger = logging.getLogger("payment-orchestrator")
 setup_logging()
 meter = metrics.get_meter("payment.business")
 invoices_created_counter = meter.create_counter(
-    "payment.invoices.created", unit="1", description="Total invoices created"
+    "payment_invoices_created", unit="1", description="Total invoices created"
 )
 invoices_amount_counter = meter.create_counter(
-    "payment.invoices.amount",
+    "payment_invoices_amount_cents",
     unit="cents",
     description="Total BRL volume generated in cents",
 )
 payments_processed_counter = meter.create_counter(
-    "payment.processed", unit="1", description="Total payments processed via webhook"
+    "payment_processed", unit="1", description="Total payments processed via webhook"
 )
 transfers_executed_counter = meter.create_counter(
-    "payment.transfers.executed",
+    "payment_transfers_executed",
     unit="1",
     description="Total transfers executed successfully",
 )
@@ -198,19 +199,19 @@ def get_scheduler_status(options):
 
 
 next_invoice_generation_gauge = meter.create_observable_gauge(
-    "payment.invoices.next_run_timestamp",
+    "payment_invoices_next_run_timestamp",
     callbacks=[get_next_run_timestamp],
     unit="s",
     description="Timestamp da próxima execução agendada (Unix)",
 )
 lifecycle_end_gauge = meter.create_observable_gauge(
-    "payment.worker.lifecycle_end_timestamp",
+    "payment_worker_lifecycle_end_timestamp",
     callbacks=[get_lifecycle_end_timestamp],
     unit="s",
     description="Timestamp de expiração do ciclo de vida do worker (Unix)",
 )
 scheduler_status_gauge = meter.create_observable_gauge(
-    "payment.scheduler.status",
+    "payment_scheduler_status",
     callbacks=[get_scheduler_status],
     unit="1",
     description="Status do agendador automático (1=Habilitado, 0=Desabilitado)",
