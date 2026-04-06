@@ -144,10 +144,47 @@ def setup_tracing():
     provider.add_span_processor(processor)
     trace.set_tracer_provider(provider)
 
+logger = logging.getLogger("payment-orchestrator")
+setup_logging()
+
+
+# --- Configurações de Métricas (Globais) ---
+meter_instance: metrics.Meter | None = None
+invoices_created_counter: metrics.Counter | None = None
+invoices_amount_counter: metrics.Counter | None = None
+payments_processed_counter: metrics.Counter | None = None
+transfers_executed_counter: metrics.Counter | None = None
+next_invoice_generation_gauge: metrics.ObservableGauge | None = None
+lifecycle_end_gauge: metrics.ObservableGauge | None = None
+scheduler_status_gauge: metrics.ObservableGauge | None = None
+
+_next_run_timestamp: float = 0.0
+_lifecycle_end_timestamp: float = 0.0
+
+
+def get_next_run_timestamp(_: Any):
+    yield metrics.Observation(_next_run_timestamp)
+
+
+def get_lifecycle_end_timestamp(_: Any):
+    yield metrics.Observation(_lifecycle_end_timestamp)
+
+
+def get_scheduler_status(_: Any):
+    val = 1.0 if settings.generate_invoices_enabled else 0.0
+    yield metrics.Observation(val)
+
 
 def setup_metrics():
+    """Configura o provedor de métricas e registra todos os instrumentos."""
     if not settings.otel_enabled:
         return
+
+    global meter_instance, invoices_created_counter, invoices_amount_counter
+    global payments_processed_counter, transfers_executed_counter
+    global next_invoice_generation_gauge, lifecycle_end_gauge, scheduler_status_gauge
+
+    # 1. Configura o Exportador e Reader
     otlp_exporter = OTLPMetricExporter(
         endpoint=settings.otel_endpoint,
         insecure=True,
@@ -158,64 +195,52 @@ def setup_metrics():
         export_interval_millis=10000,
         export_timeout_millis=settings.otel_export_timeout * 1000,
     )
+
+    # 2. Inicializa o Provider globalmente
     provider = MeterProvider(resource=get_resource(), metric_readers=[reader])
     metrics.set_meter_provider(provider)
 
+    # 3. Cria o Meter e Instrumentos
+    meter_instance = metrics.get_meter("payment.business")
 
-logger = logging.getLogger("payment-orchestrator")
-setup_logging()
-meter = metrics.get_meter("payment.business")
-invoices_created_counter = meter.create_counter(
-    "payment_invoices_created", unit="1", description="Total invoices created"
-)
-invoices_amount_counter = meter.create_counter(
-    "payment_invoices_amount_cents",
-    unit="cents",
-    description="Total BRL volume generated in cents",
-)
-payments_processed_counter = meter.create_counter(
-    "payment_processed", unit="1", description="Total payments processed via webhook"
-)
-transfers_executed_counter = meter.create_counter(
-    "payment_transfers_executed",
-    unit="1",
-    description="Total transfers executed successfully",
-)
-_next_run_timestamp = 0.0
-_lifecycle_end_timestamp = 0.0
+    invoices_created_counter = meter_instance.create_counter(
+        "payment_invoices_created", unit="1", description="Total invoices created"
+    )
+    invoices_amount_counter = meter_instance.create_counter(
+        "payment_invoices_amount_cents",
+        unit="cents",
+        description="Total BRL volume generated in cents",
+    )
+    payments_processed_counter = meter_instance.create_counter(
+        "payment_processed",
+        unit="1",
+        description="Total payments processed via webhook",
+    )
+    transfers_executed_counter = meter_instance.create_counter(
+        "payment_transfers_executed",
+        unit="1",
+        description="Total transfers executed successfully",
+    )
 
-
-def get_next_run_timestamp(options):
-    return [metrics.Observation(_next_run_timestamp)]
-
-
-def get_lifecycle_end_timestamp(options):
-    return [metrics.Observation(_lifecycle_end_timestamp)]
-
-
-def get_scheduler_status(options):
-    val = 1.0 if settings.generate_invoices_enabled else 0.0
-    return [metrics.Observation(val)]
-
-
-next_invoice_generation_gauge = meter.create_observable_gauge(
-    "payment_invoices_next_run_timestamp",
-    callbacks=[get_next_run_timestamp],
-    unit="s",
-    description="Timestamp da próxima execução agendada (Unix)",
-)
-lifecycle_end_gauge = meter.create_observable_gauge(
-    "payment_worker_lifecycle_end_timestamp",
-    callbacks=[get_lifecycle_end_timestamp],
-    unit="s",
-    description="Timestamp de expiração do ciclo de vida do worker (Unix)",
-)
-scheduler_status_gauge = meter.create_observable_gauge(
-    "payment_scheduler_status",
-    callbacks=[get_scheduler_status],
-    unit="1",
-    description="Status do agendador automático (1=Habilitado, 0=Desabilitado)",
-)
+    # Instrumentos Assíncronos (Gauges)
+    next_invoice_generation_gauge = meter_instance.create_observable_gauge(
+        "payment_invoices_next_run_timestamp",
+        callbacks=[get_next_run_timestamp],
+        unit="s",
+        description="Timestamp da próxima execução (Unix)",
+    )
+    lifecycle_end_gauge = meter_instance.create_observable_gauge(
+        "payment_worker_lifecycle_end_timestamp",
+        callbacks=[get_lifecycle_end_timestamp],
+        unit="s",
+        description="Timestamp de expiração do worker (Unix)",
+    )
+    scheduler_status_gauge = meter_instance.create_observable_gauge(
+        "payment_scheduler_status",
+        callbacks=[get_scheduler_status],
+        unit="",
+        description="Status do agendador (1=ON, 0=OFF)",
+    )
 
 
 def set_next_run_timestamp(ts: float):
@@ -229,15 +254,17 @@ def set_lifecycle_end_timestamp(ts: float):
 
 
 def on_invoices_generated(event: InvoicesGenerated):
-    invoices_created_counter.add(event.count)
-    invoices_amount_counter.add(event.total_amount)
-    logger.info(f"Observer: Tracked {event.count} new invoices.")
+    if invoices_created_counter:
+        invoices_created_counter.add(event.count)
+    if invoices_amount_counter:
+        invoices_amount_counter.add(event.total_amount)
 
 
 def on_payment_processed(event: PaymentProcessed):
-    payments_processed_counter.add(1)
-    transfers_executed_counter.add(1)
-    logger.info(f"Observer: Tracked payment for invoice {event.invoice_id}")
+    if payments_processed_counter:
+        payments_processed_counter.add(1)
+    if transfers_executed_counter:
+        transfers_executed_counter.add(1)
 
 
 dispatcher.subscribe(InvoicesGenerated, on_invoices_generated)
