@@ -2,13 +2,10 @@ import socket
 from unittest.mock import AsyncMock
 
 import pytest
+import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
-from app.domain.entities.invoice import Invoice, InvoiceStatus
-from app.domain.entities.transfer import Transfer, TransferStatus
-from app.domain.value_objects.money import Money
 from app.infra.config import settings
-from app.main import app
 
 settings.otel_enabled = False
 
@@ -23,6 +20,14 @@ def _mocked_getaddrinfo(*args, **kwargs):
 
 
 socket.getaddrinfo = _mocked_getaddrinfo
+
+from app.domain.entities.invoice import Invoice, InvoiceStatus  # noqa: E402
+from app.domain.entities.transfer import Transfer, TransferStatus  # noqa: E402
+from app.domain.value_objects.money import Money  # noqa: E402
+from app.main import app  # noqa: E402
+
+
+@pytest_asyncio.fixture
 async def async_client() -> AsyncClient:
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
