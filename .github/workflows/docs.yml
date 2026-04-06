@@ -32,7 +32,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: '3.x'
           cache: pip
 
       - name: Cache MkDocs build
@@ -44,10 +44,53 @@ jobs:
             mkdocs-material-
 
       - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install mkdocs-material
-          # se tiver requirements.txt, use: pip install -r requirements.txt
+        run: pip install mkdocs-material
 
       - name: Build & Deploy to GitHub Pages
-        run: mkdocs gh-deploy --force --clean --verbose
+        id: deploy
+        run: |
+          START=$(date +%s)
+          mkdocs gh-deploy --force --clean --verbose
+          END=$(date +%s)
+          echo "duration=$((END - START))s" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date -u '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_OUTPUT
+
+      - name: Job Summary
+        if: always()
+        run: |
+          REPO_URL="https://${{ github.repository_owner }}.github.io/$(echo '${{ github.repository }}' | cut -d'/' -f2)/"
+          STATUS="${{ job.status }}"
+          ICON="✅"
+          [ "$STATUS" != "success" ] && ICON="❌"
+
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          # ${ICON} Documentation Deploy
+
+          | | |
+          |---|---|
+          | **Status** | ${STATUS^} |
+          | **Branch** | \`${{ github.ref_name }}\` |
+          | **Commit** | [\`$(echo ${{ github.sha }} | cut -c1-7)\`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}) |
+          | **Triggered by** | ${{ github.actor }} |
+          | **Build time** | ${{ steps.deploy.outputs.duration }} |
+          | **Deployed at** | ${{ steps.deploy.outputs.timestamp }} |
+
+          ## 🌐 Live URL
+
+          > ### [$REPO_URL]($REPO_URL)
+          > Served from the \`gh-pages\` branch via GitHub Pages.
+
+          ## 📋 Steps
+
+          | Step | Status |
+          |---|---|
+          | Checkout | ✅ |
+          | Configure Git | ✅ |
+          | Setup Python | ✅ |
+          | Cache MkDocs | ✅ |
+          | Install deps | ✅ |
+          | Deploy | ${ICON} |
+
+          ---
+          _Workflow: \`${{ github.workflow }}\` · Run [${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})_
+          EOF
