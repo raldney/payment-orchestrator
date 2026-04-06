@@ -35,10 +35,11 @@ COPY --from=builder --chown=appuser:appgroup /app/.venv /app/.venv
 
 # Copy the source code
 COPY --chown=appuser:appgroup . .
+RUN chmod +x /app/scripts/entrypoint.sh
 
 USER appuser
 
 EXPOSE 8000
 
-ENTRYPOINT ["/app/scripts/entrypoint.sh"]
+ENTRYPOINT ["bash", "/app/scripts/entrypoint.sh"]
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4", "--proxy-headers"]
